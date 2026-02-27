@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <title>ETS Étanchéité</title>
+    <meta name="description" content="Dashboard de gestion pour artisan - URSSAF, Factures, Signature de contrats">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Artisan Pro">
+
+    <!-- iOS PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Artisan Pro">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <!-- iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" href="icons/icon-512x512.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/logo_transparent.png">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js pour graphiques -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase disconnected pour la version publique -->
+    <!-- PDF.js pour affichage PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- PDF-lib pour modification PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+</head>
+
+<body>
+    <!-- Mode Selection Screen -->
+    <div id="mode-selection" class="mode-selection-overlay">
+        <div class="mode-selection-container">
+            <img src="assets/logo.svg" class="mode-logo" alt="ETS Logo">
+            <h1>ETS Étanchéité Dashboard</h1>
+            <p class="mode-subtitle">Choisissez votre mode d'accès</p>
+
+            <div class="mode-cards">
+                <div class="mode-card" id="mode-admin">
+                    <div class="mode-icon">👤</div>
+                    <h3>Roulem</h3>
+                    <p>Accès complet avec édition</p>
+                </div>
+                <div class="mode-card" id="mode-visitor">
+                    <div class="mode-icon">👁️</div>
+                    <h3>Visiteur</h3>
+                    <p>Consultation uniquement</p>
+                </div>
+            </div>
+
+            <!-- Password Modal for Admin -->
+            <div id="password-modal" class="password-modal hidden">
+                <h3>🔐 Authentification</h3>
+                <input type="password" id="admin-password" placeholder="Mot de passe" autocomplete="off">
+                <div class="password-actions">
+                    <button class="btn btn-secondary" id="password-cancel">Annuler</button>
+                    <button class="btn btn-primary" id="password-submit">Valider</button>
+                </div>
+                <p id="password-error" class="password-error hidden">Mot de passe incorrect</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container hidden" id="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <img src="assets/logo.png" alt="ETS Étanchéité Logo" class="logo-img">
+                <h1>ETS Étanchéité</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item" data-section="urssaf">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">URSSAF</span>
+                </li>
+                <li class="nav-item active" data-section="factures">
+                    <span class="nav-icon">📄</span>
+                    <span class="nav-text">Factures</span>
+                </li>
+                <li class="nav-item admin-only" data-section="signature">
+                    <span class="nav-icon">✍️</span>
+                    <span class="nav-text">Signature</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="btn-link admin-only" id="backup-btn"
+                    style="margin-bottom: 0.5rem; color: var(--text-secondary);">💾 Sauvegarder</button>
+                <p id="mode-display">Mode: Admin</p>
+                <button class="btn-link" id="logout-btn">Déconnexion</button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- URSSAF Section -->
+            <section id="urssaf" class="section">
+                <div class="section-header">
+                    <h2>Déclarations URSSAF</h2>
+                    <p>Suivi des déclarations mensuelles</p>
+                </div>
+
+                <!-- Year Toggle Circles -->
+                <div class="year-toggle-container">
+                    <div class="year-toggle" id="year-toggle">
+                        <button class="year-circle active" data-year="2025">2025</button>
+                        <button class="year-circle" data-year="2026">2026</button>
+                    </div>
+                </div>
+
+                <div class="card form-card admin-only">
+                    <h3>Nouvelle déclaration</h3>
+                    <form id="urssaf-form" class="form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="urssaf-month">Mois</label>
+                                <select id="urssaf-month" required>
+                                    <option value="">Sélectionner...</option>
+                                    <option value="1">Janvier</option>
+                                    <option value="2">Février</option>
+                                    <option value="3">Mars</option>
+                                    <option value="4">Avril</option>
+                                    <option value="5">Mai</option>
+                                    <option value="6">Juin</option>
+                                    <option value="7">Juillet</option>
+                                    <option value="8">Août</option>
+                                    <option value="9">Septembre</option>
+                                    <option value="10">Octobre</option>
+                                    <option value="11">Novembre</option>
+                                    <option value="12">Décembre</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Année sélectionnée</label>
+                                <div class="year-display" id="form-year-display">2026</div>
+                                <input type="hidden" id="urssaf-year" value="2026">
+                            </div>
+                            <div class="form-group">
+                                <label for="urssaf-amount">Montant déclaré (€)</label>
+                                <input type="number" id="urssaf-amount" placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="urssaf-paid-amount">Montant payé (€)</label>
+                                <input type="number" id="urssaf-paid-amount" placeholder="0.00" step="0.01" min="0"
+                                    required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <span>Ajouter la déclaration</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Résumé stats (1st) -->
+                <div class="card stats-card">
+                    <h3>Résumé <span id="urssaf-summary-year">2026</span></h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="urssaf-total">0 €</span>
+                            <span class="stat-label">Total déclaré</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="urssaf-total-paid">0 €</span>
+                            <span class="stat-label">Total payé</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="urssaf-count">0/12</span>
+                            <span class="stat-label">Mois déclarés</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart (2nd) -->
+                <div class="card chart-card">
+                    <h3>📊 Évolution des déclarations</h3>
+                    <div class="chart-container">
+                        <canvas id="urssaf-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Historique table (3rd) -->
+                <div class="card">
+                    <h3>Historique <span id="urssaf-year-display">2026</span></h3>
+                    <div class="table-container">
+                        <table id="urssaf-table">
+                            <thead>
+                                <tr>
+                                    <th>Mois</th>
+                                    <th class="hide-mobile">Année</th>
+                                    <th>Déclaré</th>
+                                    <th>Payé</th>
+                                    <th class="hide-mobile">Date</th>
+                                    <th class="admin-only">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                        <p id="urssaf-empty" class="empty-message">Aucune déclaration enregistrée</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Factures Section -->
+            <section id="factures" class="section active">
+                <div class="section-header">
+                    <h2>Suivi des Factures</h2>
+                    <p>Gestion des factures envoyées</p>
+                </div>
+
+                <!-- Year Toggle Circles -->
+                <div class="year-toggle-container">
+                    <div class="year-toggle" id="facture-year-toggle">
+                        <button class="year-circle active" data-year="2025">2025</button>
+                        <button class="year-circle" data-year="2026">2026</button>
+                    </div>
+                </div>
+
+                <div class="card form-card admin-only">
+                    <h3>Nouvelle facture</h3>
+                    <form id="facture-form" class="form">
+                        <div class="form-row">
+
+                            <div class="form-group">
+                                <label for="facture-client">Client</label>
+                                <input type="text" id="facture-client" list="client-list" placeholder="Nom du client"
+                                    required value="SEO">
+                                <datalist id="client-list">
+                                    <option value="SEO">
+                                    <option value="SBER">
+                                    <option value="Renov Rennes">
+                                    <option value="Fougèraise">
+                                    <option value="Kamel">
+                                    <option value="Divers">
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="facture-montant">Montant (€)</label>
+                                <input type="number" id="facture-montant" placeholder="0.00" step="0.01" min="0"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="facture-date">Date d'envoi</label>
+                                <input type="date" id="facture-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="facture-description">Description</label>
+                                <input type="text" id="facture-description" placeholder="Description (optionnel)">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <span>Ajouter la facture</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card stats-card">
+                    <h3>Statistiques <span id="facture-stats-year">2026</span></h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="facture-total">0 €</span>
+                            <span class="stat-label">Total facturé</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="facture-net">0 €</span>
+                            <span class="stat-label">Bénéfice net</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="facture-paid">0 €</span>
+                            <span class="stat-label">Total payé</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="facture-pending">0 €</span>
+                            <span class="stat-label">En attente</span>
+                        </div>
+                    </div>
+                    <button id="facture-stats-toggle" class="btn btn-secondary btn-sm"
+                        style="margin: 15px auto 0; display: none;">
+                        🔄 Voir Total Facturé
+                    </button>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-card">
+                        <h3>📊 Facturations mensuelles</h3>
+                        <div class="chart-container">
+                            <canvas id="facture-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <div class="chart-header-toggle">
+                            <h3 id="pie-chart-title">👥 Facturations par client</h3>
+                            <div class="chart-toggle" id="chart-toggle">
+                                <button class="chart-toggle-btn" data-view="status">Statuts</button>
+                                <button class="chart-toggle-btn active" data-view="clients">Clients</button>
+                            </div>
+                        </div>
+                        <div class="chart-container chart-small">
+                            <canvas id="facture-pie-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-with-filter">
+                        <h3>Liste des factures</h3>
+                        <div class="filter-group">
+                            <select id="facture-filter-month">
+                                <option value="">Tous les mois</option>
+                                <option value="1">Janvier</option>
+                                <option value="2">Février</option>
+                                <option value="3">Mars</option>
+                                <option value="4">Avril</option>
+                                <option value="5">Mai</option>
+                                <option value="6">Juin</option>
+                                <option value="7">Juillet</option>
+                                <option value="8">Août</option>
+                                <option value="9">Septembre</option>
+                                <option value="10">Octobre</option>
+                                <option value="11">Novembre</option>
+                                <option value="12">Décembre</option>
+                            </select>
+                            <select id="facture-filter-status">
+                                <option value="">Tous les statuts</option>
+                                <option value="pending">En attente</option>
+                                <option value="paid">Payée</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="facture-table">
+                            <thead>
+                                <tr>
+                                    <th>N° Facture</th>
+                                    <th>Client</th>
+                                    <th>Montant</th>
+                                    <th class="hide-mobile">Date d'envoi</th>
+                                    <th>Statut</th>
+                                    <th class="admin-only">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                        <p id="facture-empty" class="empty-message">Aucune facture enregistrée</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Signature Section -->
+            <section id="signature" class="section admin-only">
+                <div class="section-header">
+                    <h2>Signature de Contrats</h2>
+                    <p>Signez vos contrats PDF automatiquement</p>
+                </div>
+
+                <div class="signature-layout">
+                    <div class="card upload-card">
+                        <h3>1. Charger le contrat PDF</h3>
+                        <div class="upload-zone" id="pdf-upload-zone">
+                            <input type="file" id="pdf-input" accept=".pdf" hidden>
+                            <span class="upload-icon">📄</span>
+                            <p>Glissez un PDF ici ou <button type="button" class="btn-link"
+                                    onclick="document.getElementById('pdf-input').click()">parcourir</button></p>
+                        </div>
+                        <div id="pdf-info" class="file-info hidden">
+                            <span class="file-name"></span>
+                            <button type="button" class="btn-icon" id="remove-pdf">✕</button>
+                        </div>
+                        <div id="contract-amount" class="amount-display hidden">
+                            <span class="amount-label">Montant du contrat :</span>
+                            <span class="amount-value"></span>
+                        </div>
+                    </div>
+
+                    <div class="card upload-card">
+                        <h3>2. Charger votre signature</h3>
+                        <div class="upload-zone" id="signature-upload-zone">
+                            <input type="file" id="signature-input" accept="image/png,image/jpeg" hidden>
+                            <span class="upload-icon">✍️</span>
+                            <p>Glissez une image (PNG transparent) ou <button type="button" class="btn-link"
+                                    onclick="document.getElementById('signature-input').click()">parcourir</button></p>
+                        </div>
+                        <div id="signature-preview" class="signature-preview hidden">
+                            <img id="signature-img" alt="Signature">
+                            <button type="button" class="btn-icon" id="remove-signature">✕</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="signature-size">Taille de la signature</label>
+                            <input type="range" id="signature-size" min="50" max="300" value="150">
+                            <span id="signature-size-value">150px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card pdf-viewer-card">
+                    <div class="card-header-with-actions">
+                        <h3>3. Positionnez votre signature</h3>
+                        <div class="page-controls">
+                            <button type="button" class="btn btn-secondary" id="prev-page" disabled>◀ Précédent</button>
+                            <span id="page-info">Page 1 / 1</span>
+                            <button type="button" class="btn btn-secondary" id="next-page" disabled>Suivant ▶</button>
+                        </div>
+                    </div>
+                    <div class="pdf-container" id="pdf-container">
+                        <canvas id="pdf-canvas"></canvas>
+                        <div id="signature-draggable" class="signature-draggable hidden">
+                            <img id="draggable-signature" alt="Signature à placer">
+                        </div>
+                        <p class="placeholder-text" id="pdf-placeholder">Chargez un PDF pour commencer</p>
+                    </div>
+                </div>
+
+                <div class="card action-card">
+                    <button type="button" class="btn btn-primary btn-large" id="sign-pdf" disabled>
+                        <span>📝 Signer et télécharger le PDF</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation (visible only on phones) -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-item" data-section="urssaf">
+            <span class="nav-icon">📋</span>
+            <span>URSSAF</span>
+        </div>
+        <div class="mobile-nav-item active" data-section="factures">
+            <span class="nav-icon">📄</span>
+            <span>Factures</span>
+        </div>
+        <div class="mobile-nav-item admin-only" data-section="signature">
+            <span class="nav-icon">✍️</span>
+            <span>Signature</span>
+        </div>
+    </nav>
+
+    <!-- Toast notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/urssaf.js"></script>
+    <script src="js/factures.js"></script>
+    <script src="js/signature.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/migration.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('PWA: Service Worker enregistré', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('PWA: Erreur Service Worker', error);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>

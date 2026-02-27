@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Autoriser lecture/écriture pour tous (mode développement)
+    // À sécuriser plus tard avec authentification
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
