@@ -1,49 +1,29 @@
-# Dashboard Artisan
+# Dashboard Artisan Public
 
-Application web de gestion pour artisan avec 3 modules :
+Version publique de démonstration du dashboard ETS Étanchéité.
 
-## 🛠️ Fonctionnalités
+## Fonctionnalités
 
-### 📋 URSSAF
-- Déclarations mensuelles avec montants
-- Historique et statistiques annuelles
-- Graphique d'évolution des déclarations
+- Accueil avec KPI de démonstration
+- Module URSSAF
+- Module Factures
+- Module Documents avec PDF factices
+- Module Signature PDF
 
-### 📄 Factures
-- Suivi des factures envoyées
-- Filtrage par mois/année/statut
-- Statut payé/en attente
-- Graphiques de facturation mensuelle et répartition
+## Données publiques
 
-### ✍️ Signature de Contrats
-- Upload de PDF
-- Extraction automatique du montant ("pour la somme globale et forfaitaire de...")
-- Positionnement de signature par glisser-déposer
-- Signature sauvegardée pour réutilisation
-- Téléchargement du PDF signé
+- Tous les montants affichés sont fictifs
+- Tous les clients et documents sont fictifs
+- Aucune donnée Firebase réelle n'est utilisée sur cette version
+- La navigation publique fonctionne en lecture seule sur GitHub Pages
 
-## 🚀 Installation
+## Lancement local
 
 ```bash
-# Cloner le repo
-git clone https://github.com/votre-username/artisan-dashboard.git
-
-# Lancer le serveur
-cd artisan-dashboard
+cd Artisan-dashboard_Version_Public
 npx serve . -l 3456
 ```
 
-Ouvrir http://localhost:3456
+Puis ouvrir `http://localhost:3456` ou la version publiée :
 
-## 📦 Technologies
-
-- HTML5, CSS3, JavaScript ES6+
-- [Chart.js](https://www.chartjs.org/) - Graphiques
-- [PDF.js](https://mozilla.github.io/pdf.js/) - Affichage PDF
-- [PDF-lib](https://pdf-lib.js.org/) - Modification PDF
-- localStorage - Persistance données
-
-## 🔒 Confidentialité
-
-- Données stockées localement uniquement
-- Meta `noindex, nofollow` pour éviter le référencement
+`https://marco1t.github.io/Artisan-dashboard_Version_Public/`
